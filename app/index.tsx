@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Region } from 'react-native-maps';
 import { NativeUserLocationMarker } from '@/components/NativeUserLocationMarker';
 import { LocationPermissionScreen } from '@/components/LocationPermissionScreen';
-import { SideMenu } from '@/components/SideMenu';
+import { FloatingMenu } from '@/components/FloatingMenu';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
 import { 
   MapPin, 
@@ -70,7 +70,6 @@ export default function MapScreen() {
   const [userHasInteracted, setUserHasInteracted] = useState(false);
   
   const mapRef = useRef<MapView>(null);
-  const slideAnim = useRef(new RNAnimated.Value(-190)).current; // Reduced to 75% of 250px = 190px
   const lastLocationUpdate = useRef<number>(0);
   const isAnimatingToUser = useRef<boolean>(false);
 
@@ -111,15 +110,6 @@ export default function MapScreen() {
       }
     }
   }, [location, isFollowingUser, userHasInteracted]);
-
-  // Menu animation
-  useEffect(() => {
-    RNAnimated.timing(slideAnim, {
-      toValue: isMenuOpen ? 0 : -190, // Reduced to 75% of 250px = 190px
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [isMenuOpen]);
 
   // Handle when user starts interacting with the map
   const handleUserInteractionStart = () => {
@@ -370,33 +360,28 @@ export default function MapScreen() {
         </View>
       </View>
 
-      {/* Side Menu */}
+      {/* Floating Menu Modal */}
       <Modal
         visible={isMenuOpen}
         transparent={true}
-        animationType="none"
+        animationType="fade"
         onRequestClose={() => setIsMenuOpen(false)}
       >
         <TouchableOpacity 
-          style={styles.menuOverlay}
+          style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setIsMenuOpen(false)}
         >
-          <RNAnimated.View 
-            style={[
-              styles.menuContainer,
-              { transform: [{ translateX: slideAnim }] }
-            ]}
-          >
+          <View style={styles.modalContent}>
             <TouchableOpacity activeOpacity={1}>
-              <SideMenu 
+              <FloatingMenu 
                 onClose={() => setIsMenuOpen(false)}
                 location={location}
                 isTracking={isTracking}
                 accuracy={accuracy}
               />
             </TouchableOpacity>
-          </RNAnimated.View>
+          </View>
         </TouchableOpacity>
       </Modal>
     </SafeAreaView>
@@ -546,13 +531,16 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     padding: 4,
   },
-  menuOverlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
-  menuContainer: {
-    width: 190, // Reduced to 75% of 250px = 190px
-    height: '100%',
-    backgroundColor: '#FFFFFF',
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
   },
 });
