@@ -67,9 +67,12 @@ export default function MapScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
   const [isFollowingUser, setIsFollowingUser] = useState(true);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
   
   const mapRef = useRef<MapView>(null);
   const slideAnim = useRef(new RNAnimated.Value(-300)).current;
+  const lastLocationUpdate = useRef<number>(0);
+  const isAnimatingToUser = useRef<boolean>(false);
 
   // Auto-start tracking when permissions are granted
   useEffect(() => {
@@ -80,19 +83,34 @@ export default function MapScreen() {
 
   // Update region when location changes and following user
   useEffect(() => {
-    if (location && location.isValid && isFollowingUser) {
+    if (location && location.isValid && isFollowingUser && !userHasInteracted) {
+      const now = Date.now();
+      
+      // Throttle location updates to avoid excessive animations
+      if (now - lastLocationUpdate.current < 1000) return;
+      lastLocationUpdate.current = now;
+
       const newRegion: Region = {
         latitude: location.latitude,
         longitude: location.longitude,
         latitudeDelta: currentRegion?.latitudeDelta || 0.008,
         longitudeDelta: currentRegion?.longitudeDelta || 0.008,
       };
+      
       setCurrentRegion(newRegion);
       
-      // Animate to new location
-      mapRef.current?.animateToRegion(newRegion, 1000);
+      // Only animate if we're not already animating
+      if (!isAnimatingToUser.current) {
+        isAnimatingToUser.current = true;
+        mapRef.current?.animateToRegion(newRegion, 800);
+        
+        // Reset animation flag after animation completes
+        setTimeout(() => {
+          isAnimatingToUser.current = false;
+        }, 1000);
+      }
     }
-  }, [location, isFollowingUser]);
+  }, [location, isFollowingUser, userHasInteracted]);
 
   // Menu animation
   useEffect(() => {
@@ -103,20 +121,42 @@ export default function MapScreen() {
     }).start();
   }, [isMenuOpen]);
 
+  // Handle when user starts interacting with the map
+  const handleUserInteractionStart = () => {
+    if (isFollowingUser) {
+      console.log('🎯 User started interacting - stopping auto-follow');
+      setUserHasInteracted(true);
+      setIsFollowingUser(false);
+    }
+  };
+
   // Handle map region changes (when user manually moves the map)
   const handleRegionChange = (region: Region) => {
+    // Don't update if we're animating to user location
+    if (isAnimatingToUser.current) return;
+    
+    setCurrentRegion(region);
+  };
+
+  // Handle region change complete
+  const handleRegionChangeComplete = (region: Region) => {
+    // Don't process if we're animating to user location
+    if (isAnimatingToUser.current) return;
+    
     setCurrentRegion(region);
     
-    // If user manually moves the map, stop following
-    if (isFollowingUser && location) {
+    // If user manually moved the map significantly, stop following
+    if (isFollowingUser && location && location.isValid) {
       const distance = Math.sqrt(
         Math.pow(region.latitude - location.latitude, 2) + 
         Math.pow(region.longitude - location.longitude, 2)
       );
       
-      // If moved more than ~100m, stop following
-      if (distance > 0.001) {
+      // If moved more than ~50m, stop following
+      if (distance > 0.0005) {
+        console.log('🎯 User moved map significantly - stopping auto-follow');
         setIsFollowingUser(false);
+        setUserHasInteracted(true);
       }
     }
   };
@@ -124,6 +164,8 @@ export default function MapScreen() {
   // Recenter to user location
   const handleRecenter = () => {
     if (location && location.isValid) {
+      console.log('🎯 Recentering to user location');
+      
       const newRegion: Region = {
         latitude: location.latitude,
         longitude: location.longitude,
@@ -133,7 +175,14 @@ export default function MapScreen() {
       
       setCurrentRegion(newRegion);
       setIsFollowingUser(true);
+      setUserHasInteracted(false);
+      
+      isAnimatingToUser.current = true;
       mapRef.current?.animateToRegion(newRegion, 1000);
+      
+      setTimeout(() => {
+        isAnimatingToUser.current = false;
+      }, 1200);
     }
   };
 
@@ -201,7 +250,7 @@ export default function MapScreen() {
         ref={mapRef}
         style={styles.map}
         initialRegion={initialRegion}
-        region={isFollowingUser ? currentRegion : undefined}
+        region={isFollowingUser && !userHasInteracted ? currentRegion : undefined}
         showsUserLocation={false} // We use our custom marker
         showsMyLocationButton={false}
         showsCompass={true}
@@ -221,9 +270,11 @@ export default function MapScreen() {
         loadingEnabled={true}
         moveOnMarkerPress={false}
         
-        // Handle region changes
+        // Handle user interactions
+        onTouchStart={handleUserInteractionStart}
+        onPanDrag={handleUserInteractionStart}
         onRegionChange={handleRegionChange}
-        onRegionChangeComplete={handleRegionChange}
+        onRegionChangeComplete={handleRegionChangeComplete}
         
         // Zoom controls
         minZoomLevel={3}           // World view
@@ -291,13 +342,13 @@ export default function MapScreen() {
         <TouchableOpacity 
           style={[
             styles.controlButton,
-            { backgroundColor: isFollowingUser ? '#3B82F6' : '#FFFFFF' }
+            { backgroundColor: isFollowingUser && !userHasInteracted ? '#3B82F6' : '#FFFFFF' }
           ]}
           onPress={handleRecenter}
         >
           <Target 
             size={20} 
-            color={isFollowingUser ? "#FFFFFF" : "#374151"} 
+            color={isFollowingUser && !userHasInteracted ? "#FFFFFF" : "#374151"} 
           />
         </TouchableOpacity>
       </View>
