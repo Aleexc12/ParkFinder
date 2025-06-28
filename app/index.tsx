@@ -65,6 +65,8 @@ export default function MapScreen() {
   const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
+  const [isFollowingUser, setIsFollowingUser] = useState(true);
   
   const mapRef = useRef<MapView>(null);
   const slideAnim = useRef(new RNAnimated.Value(-300)).current;
@@ -76,6 +78,22 @@ export default function MapScreen() {
     }
   }, [hasPermission]);
 
+  // Update region when location changes and following user
+  useEffect(() => {
+    if (location && location.isValid && isFollowingUser) {
+      const newRegion: Region = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: currentRegion?.latitudeDelta || 0.008,
+        longitudeDelta: currentRegion?.longitudeDelta || 0.008,
+      };
+      setCurrentRegion(newRegion);
+      
+      // Animate to new location
+      mapRef.current?.animateToRegion(newRegion, 1000);
+    }
+  }, [location, isFollowingUser]);
+
   // Menu animation
   useEffect(() => {
     RNAnimated.timing(slideAnim, {
@@ -84,6 +102,40 @@ export default function MapScreen() {
       useNativeDriver: true,
     }).start();
   }, [isMenuOpen]);
+
+  // Handle map region changes (when user manually moves the map)
+  const handleRegionChange = (region: Region) => {
+    setCurrentRegion(region);
+    
+    // If user manually moves the map, stop following
+    if (isFollowingUser && location) {
+      const distance = Math.sqrt(
+        Math.pow(region.latitude - location.latitude, 2) + 
+        Math.pow(region.longitude - location.longitude, 2)
+      );
+      
+      // If moved more than ~100m, stop following
+      if (distance > 0.001) {
+        setIsFollowingUser(false);
+      }
+    }
+  };
+
+  // Recenter to user location
+  const handleRecenter = () => {
+    if (location && location.isValid) {
+      const newRegion: Region = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.008,
+        longitudeDelta: 0.008,
+      };
+      
+      setCurrentRegion(newRegion);
+      setIsFollowingUser(true);
+      mapRef.current?.animateToRegion(newRegion, 1000);
+    }
+  };
 
   // Permission check
   if (hasPermission === null) {
@@ -136,7 +188,7 @@ export default function MapScreen() {
     );
   }
 
-  const region: Region = {
+  const initialRegion: Region = currentRegion || {
     latitude: location.latitude,
     longitude: location.longitude,
     latitudeDelta: 0.008,
@@ -148,18 +200,19 @@ export default function MapScreen() {
       <MapView
         ref={mapRef}
         style={styles.map}
-        initialRegion={region}
+        initialRegion={initialRegion}
+        region={isFollowingUser ? currentRegion : undefined}
         showsUserLocation={false} // We use our custom marker
         showsMyLocationButton={false}
-        showsCompass={false}
+        showsCompass={true}
         mapType={mapType}
         
-        // DESHABILITAR COMPLETAMENTE TODOS LOS MOVIMIENTOS
-        pitchEnabled={false}
-        rotateEnabled={false}
-        scrollEnabled={false}  // NO SCROLL
-        zoomEnabled={false}    // NO ZOOM
-        panEnabled={false}     // NO PAN
+        // ENABLE ALL MAP NAVIGATION
+        pitchEnabled={true}        // Allow 3D tilt
+        rotateEnabled={true}       // Allow rotation
+        scrollEnabled={true}       // Allow panning/scrolling
+        zoomEnabled={true}         // Allow pinch to zoom
+        panEnabled={true}          // Allow dragging
         
         followsUserLocation={false}
         showsBuildings={true}
@@ -168,9 +221,17 @@ export default function MapScreen() {
         loadingEnabled={true}
         moveOnMarkerPress={false}
         
-        // DESHABILITAR GESTOS COMPLETAMENTE
-        onRegionChange={() => {}} // Vacío para evitar cualquier cambio
-        onRegionChangeComplete={() => {}} // Vacío para evitar cualquier cambio
+        // Handle region changes
+        onRegionChange={handleRegionChange}
+        onRegionChangeComplete={handleRegionChange}
+        
+        // Zoom controls
+        minZoomLevel={3}           // World view
+        maxZoomLevel={20}          // Very close street level
+        
+        // Performance optimizations
+        loadingBackgroundColor="#F9FAFB"
+        loadingIndicatorColor="#3B82F6"
       >
         {/* Parking markers at their actual locations */}
         {chinaParkingData.map((parking) => (
@@ -228,10 +289,16 @@ export default function MapScreen() {
 
         {/* Recenter button */}
         <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={recenterMap}
+          style={[
+            styles.controlButton,
+            { backgroundColor: isFollowingUser ? '#3B82F6' : '#FFFFFF' }
+          ]}
+          onPress={handleRecenter}
         >
-          <Target size={20} color="#374151" />
+          <Target 
+            size={20} 
+            color={isFollowingUser ? "#FFFFFF" : "#374151"} 
+          />
         </TouchableOpacity>
       </View>
 
@@ -251,6 +318,15 @@ export default function MapScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Following indicator */}
+      {!isFollowingUser && (
+        <View style={styles.followingIndicator}>
+          <Text style={styles.followingText}>
+            Toca el botón de ubicación para seguir tu posición
+          </Text>
+        </View>
+      )}
 
       {/* Side Menu */}
       <Modal
@@ -427,6 +503,23 @@ const styles = StyleSheet.create({
   micButton: {
     marginLeft: 12,
     padding: 4,
+  },
+  followingIndicator: {
+    position: 'absolute',
+    top: 120,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(59, 130, 246, 0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 1000,
+  },
+  followingText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   menuOverlay: {
     flex: 1,
