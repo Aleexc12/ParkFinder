@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "ParkingFinder",
+    "slug": "parking-finder-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "parkingfinder",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMotionUsageDescription": "Esta aplicación usa el acelerómetro para detectar movimiento y mejorar la precisión del seguimiento.",
+        "NSLocationWhenInUseUsageDescription": "ParkingFinder necesita acceso a tu ubicación para mostrarte tu posición en el mapa.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "ParkingFinder necesita acceso continuo a tu ubicación para funcionar correctamente en segundo plano.",
+        "NSLocationAlwaysUsageDescription": "ParkingFinder necesita acceso continuo a tu ubicación para funcionar correctamente en segundo plano."
+      },
+      "bundleIdentifier": "com.anonymous.parkingfinderapp"
+    },
+    "android": {
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ],
+      "package": "com.anonymous.parkingfinderapp"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "ParkingFinder necesita acceso continuo a tu ubicación para funcionar correctamente en segundo plano.",
+          "locationAlwaysPermission": "ParkingFinder necesita acceso continuo a tu ubicación para funcionar correctamente en segundo plano.",
+          "locationWhenInUsePermission": "ParkingFinder necesita acceso a tu ubicación para mostrarte tu posición en el mapa.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
