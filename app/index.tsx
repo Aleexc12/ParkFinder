@@ -20,8 +20,6 @@ import {
   MapPin, 
   Navigation, 
   Target, 
-  Play, 
-  Pause, 
   Map, 
   Satellite, 
   Menu,
@@ -86,14 +84,6 @@ export default function MapScreen() {
       useNativeDriver: true,
     }).start();
   }, [isMenuOpen]);
-
-  const toggleTracking = () => {
-    if (isTracking) {
-      stopTracking();
-    } else {
-      startTracking();
-    }
-  };
 
   // Permission check
   if (hasPermission === null) {
@@ -224,7 +214,7 @@ export default function MapScreen() {
 
       {/* Top Right Controls */}
       <View style={styles.topRightControls}>
-        {/* Map type toggle - Top */}
+        {/* Map type toggle */}
         <TouchableOpacity 
           style={styles.controlButton}
           onPress={() => setMapType(prev => prev === 'standard' ? 'satellite' : 'standard')}
@@ -236,15 +226,12 @@ export default function MapScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Toggle tracking button */}
+        {/* Recenter button */}
         <TouchableOpacity 
-          style={[
-            styles.controlButton,
-            { backgroundColor: isTracking ? '#10B981' : '#EF4444' }
-          ]}
-          onPress={toggleTracking}
+          style={styles.controlButton}
+          onPress={recenterMap}
         >
-          {isTracking ? <Pause size={20} color="#FFFFFF" /> : <Play size={20} color="#FFFFFF" />}
+          <Target size={20} color="#374151" />
         </TouchableOpacity>
       </View>
 

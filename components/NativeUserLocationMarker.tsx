@@ -35,7 +35,7 @@ export function NativeUserLocationMarker({ location }: NativeUserLocationMarkerP
   useEffect(() => {
     if (location.signalStrength === 'lost') {
       pulseAnim.value = withRepeat(
-        withTiming(1.2, {
+        withTiming(1.3, {
           duration: 2000,
           easing: Easing.inOut(Easing.ease),
         }),
@@ -45,8 +45,8 @@ export function NativeUserLocationMarker({ location }: NativeUserLocationMarkerP
       opacityAnim.value = withTiming(0.6, { duration: 500 });
     } else {
       pulseAnim.value = withRepeat(
-        withTiming(1.4, {
-          duration: 1200,
+        withTiming(1.5, {
+          duration: 1500,
           easing: Easing.inOut(Easing.ease),
         }),
         -1,
@@ -56,7 +56,7 @@ export function NativeUserLocationMarker({ location }: NativeUserLocationMarkerP
     }
   }, [location.signalStrength]);
 
-  // FIXED: Smooth rotation animation using smoothed heading
+  // Smooth rotation animation using smoothed heading
   useEffect(() => {
     const targetHeading = location.smoothedHeading;
     const currentHeading = rotationAnim.value;
@@ -81,9 +81,9 @@ export function NativeUserLocationMarker({ location }: NativeUserLocationMarkerP
     let targetScale = 1;
     
     if (location.signalStrength === 'lost') {
-      targetScale = 0.8;
+      targetScale = 0.85;
     } else if (location.isMoving) {
-      targetScale = 1.15;
+      targetScale = 1.1;
     }
     
     scaleAnim.value = withSpring(targetScale, {
@@ -96,52 +96,36 @@ export function NativeUserLocationMarker({ location }: NativeUserLocationMarkerP
   const getSignalColor = useMemo(() => {
     switch (location.signalStrength) {
       case 'excellent':
-        return '#10B981';
+        return '#1E88E5'; // Google Maps blue
       case 'good':
-        return '#22C55E';
+        return '#1976D2';
       case 'poor':
-        return '#F59E0B';
+        return '#FB8C00';
       case 'lost':
-        return '#EF4444';
+        return '#E53935';
       default:
-        return '#9CA3AF';
+        return '#9E9E9E';
     }
   }, [location.signalStrength]);
 
-  const getCircleSize = useMemo(() => {
-    if (!location.accuracy) return 32;
-    const baseSize = 28;
-    const maxSize = 50;
-    const scaleFactor = Math.min(location.accuracy / 25, 1);
+  const getAccuracyCircleSize = useMemo(() => {
+    if (!location.accuracy) return 40;
+    const baseSize = 35;
+    const maxSize = 60;
+    const scaleFactor = Math.min(location.accuracy / 30, 1);
     return baseSize + (maxSize - baseSize) * scaleFactor;
   }, [location.accuracy]);
 
-  const getCircleOpacity = useMemo(() => {
-    switch (location.signalStrength) {
-      case 'excellent':
-        return 0.4;
-      case 'good':
-        return 0.35;
-      case 'poor':
-        return 0.25;
-      case 'lost':
-        return 0.15;
-      default:
-        return 0.2;
-    }
-  }, [location.signalStrength]);
-
   const signalColor = getSignalColor;
-  const circleSize = getCircleSize;
-  const circleOpacity = getCircleOpacity;
+  const accuracyCircleSize = getAccuracyCircleSize;
 
   // Animated styles
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseAnim.value }],
-    opacity: opacityAnim.value,
+    opacity: 0.2,
   }));
 
-  const rotatingStyle = useAnimatedStyle(() => ({
+  const containerStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: scaleAnim.value },
       { rotate: `${rotationAnim.value}deg` },
@@ -149,106 +133,50 @@ export function NativeUserLocationMarker({ location }: NativeUserLocationMarkerP
     opacity: opacityAnim.value,
   }));
 
-  const containerStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scaleAnim.value }],
-    opacity: opacityAnim.value,
-  }));
-
   return (
     <View style={styles.markerContainer}>
-      {/* Main marker container - this stays centered */}
-      <Animated.View 
-        style={[
-          styles.container, 
-          { 
-            width: circleSize, 
-            height: circleSize,
-          },
-          containerStyle
-        ]}
-      >
-        {/* Outer pulsing circle */}
-        <Animated.View
-          style={[
-            styles.outerCircle,
-            {
-              width: circleSize,
-              height: circleSize,
-              borderRadius: circleSize / 2,
-              borderColor: signalColor,
-              backgroundColor: `${signalColor}${Math.round(circleOpacity * 255).toString(16).padStart(2, '0')}`,
-            },
-            pulseStyle,
-          ]}
-        />
-        
-        {/* Main rotating marker (center dot) */}
-        <Animated.View
-          style={[
-            styles.rotatingContainer,
-            rotatingStyle,
-          ]}
-        >
-          {/* Middle circle */}
-          <View
-            style={[
-              styles.middleCircle,
-              {
-                backgroundColor: signalColor,
-                opacity: location.signalStrength === 'lost' ? 0.6 : 0.8,
-              },
-            ]}
-          />
-          
-          {/* Inner circle (main dot) */}
-          <View
-            style={[
-              styles.innerCircle,
-              {
-                backgroundColor: signalColor,
-              },
-            ]}
-          />
-
-          {/* Movement indicator */}
-          {location.isMoving && location.signalStrength !== 'lost' && (
-            <View style={[styles.movementIndicator, { backgroundColor: signalColor }]}>
-              <View style={styles.movementDot} />
-            </View>
-          )}
-
-          {/* Signal strength indicator */}
-          {location.signalStrength === 'excellent' && (
-            <View style={[styles.precisionIndicator, { backgroundColor: signalColor }]}>
-              <View style={styles.precisionDot} />
-            </View>
-          )}
-
-          {/* Signal lost indicator */}
-          {location.signalStrength === 'lost' && (
-            <View style={[styles.signalLostIndicator, { backgroundColor: signalColor }]}>
-              <View style={styles.signalLostDot} />
-            </View>
-          )}
-        </Animated.View>
-      </Animated.View>
-
-      {/* Direction arrow - positioned OUTSIDE the main container */}
+      {/* Accuracy circle (pulsing background) */}
       <Animated.View
         style={[
-          styles.arrowContainer,
-          rotatingStyle,
+          styles.accuracyCircle,
+          {
+            width: accuracyCircleSize,
+            height: accuracyCircleSize,
+            borderRadius: accuracyCircleSize / 2,
+            backgroundColor: signalColor,
+          },
+          pulseStyle,
         ]}
-      >
-        <View
-          style={[
-            styles.directionArrow,
-            {
-              borderBottomColor: signalColor,
-              opacity: location.signalStrength === 'lost' ? 0.6 : 1,
-            },
-          ]}
-        />
+      />
+      
+      {/* Main marker with integrated arrow (Waze/Google Maps style) */}
+      <Animated.View style={[styles.markerBody, containerStyle]}>
+        {/* Teardrop/chevron shape pointing forward */}
+        <View style={[styles.chevronContainer, { backgroundColor: signalColor }]}>
+          {/* Main circular body */}
+          <View style={[styles.mainCircle, { backgroundColor: signalColor }]}>
+            {/* Inner white dot */}
+            <View style={styles.innerDot} />
+            
+            {/* Movement indicator ring */}
+            {location.isMoving && location.signalStrength !== 'lost' && (
+              <View style={[styles.movementRing, { borderColor: signalColor }]} />
+            )}
+          </View>
+          
+          {/* Directional chevron/arrow pointing forward */}
+          <View style={[styles.directionChevron, { borderBottomColor: signalColor }]} />
+        </View>
+
+        {/* Signal quality indicator */}
+        {location.signalStrength === 'excellent' && (
+          <View style={[styles.qualityIndicator, { backgroundColor: signalColor }]} />
+        )}
+        
+        {/* Signal lost warning */}
+        {location.signalStrength === 'lost' && (
+          <View style={[styles.warningIndicator, { backgroundColor: '#FF5722' }]} />
+        )}
       </Animated.View>
     </View>
   );
@@ -258,92 +186,84 @@ const styles = StyleSheet.create({
   markerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 60, // Larger container to accommodate arrow
-    height: 60,
+    width: 80,
+    height: 80,
   },
-  container: {
+  accuracyCircle: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  markerBody: {
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'absolute', // Position absolutely within markerContainer
+    width: 36,
+    height: 44, // Taller to accommodate the chevron
   },
-  outerCircle: {
-    position: 'absolute',
-    borderWidth: 2,
-  },
-  rotatingContainer: {
+  chevronContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 36,
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  middleCircle: {
-    position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
+  mainCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
     borderColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 6,
   },
-  innerCircle: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
+  innerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 1,
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 10,
-    zIndex: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  // Arrow container positioned separately
-  arrowContainer: {
+  movementRing: {
     position: 'absolute',
-    top: 8, // Position arrow above the center
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    backgroundColor: 'transparent',
   },
-  directionArrow: {
+  directionChevron: {
+    position: 'absolute',
+    top: -8,
     width: 0,
     height: 0,
     borderLeftWidth: 8,
     borderRightWidth: 8,
-    borderBottomWidth: 16,
+    borderBottomWidth: 12,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  movementIndicator: {
-    position: 'absolute',
-    bottom: -16,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -353,21 +273,15 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  movementDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#FFFFFF',
-  },
-  precisionIndicator: {
+  qualityIndicator: {
     position: 'absolute',
-    top: -6,
-    right: -6,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -377,21 +291,15 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-  precisionDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#FFFFFF',
-  },
-  signalLostIndicator: {
+  warningIndicator: {
     position: 'absolute',
-    top: -6,
-    left: -6,
+    top: -2,
+    left: -2,
     width: 10,
     height: 10,
     borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -400,11 +308,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 3,
-  },
-  signalLostDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#FFFFFF',
   },
 });
