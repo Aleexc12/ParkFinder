@@ -92,19 +92,19 @@ export default function MapScreen() {
       lastLocationUpdate.current = now;
 
       if (isTrackingMode) {
-        // Tracking Mode: Close-up view with smooth heading following (like Waze/Google)
-        // FIXED: Use the OPPOSITE of smoothedHeading to point camera in correct direction
-        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        // Tracking Mode: Close-up view with CORRECTED heading (NO 3D)
+        // FIXED: Use the user's heading directly (not inverted)
+        const correctedHeading = location.smoothedHeading;
         
         const newCamera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          pitch: 45, // Slight 3D tilt for better road view
-          heading: correctedHeading, // CORRECTED: Camera points opposite to user's heading
-          altitude: 300, // Closer to ground for navigation feel
-          zoom: 18.5, // Very close zoom for navigation
+          pitch: 0, // NO 3D - Keep it flat like Google Maps standard view
+          heading: correctedHeading, // CORRECTED: Camera rotates to match user's direction
+          altitude: 200, // Closer to ground for navigation feel
+          zoom: 19, // Very close zoom for navigation
         };
         
         setCurrentCamera(newCamera);
@@ -189,19 +189,19 @@ export default function MapScreen() {
     
     if (location && location.isValid) {
       if (newTrackingMode) {
-        // Switch to Tracking Mode (Waze/Google style)
-        // FIXED: Use corrected heading calculation
-        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        // Switch to Tracking Mode (Waze/Google style) - NO 3D
+        // FIXED: Use user's heading directly so arrow points forward
+        const correctedHeading = location.smoothedHeading;
         
         const camera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          pitch: 45, // Slight tilt for road perspective
-          heading: correctedHeading, // CORRECTED: Camera points in correct direction
-          altitude: 300, // Close to ground
-          zoom: 18.5, // Very close for navigation
+          pitch: 0, // NO 3D - Keep it completely flat
+          heading: correctedHeading, // CORRECTED: Camera follows user's direction
+          altitude: 200, // Close to ground but no 3D tilt
+          zoom: 19, // Very close for navigation
         };
         
         setCurrentCamera(camera);
@@ -252,18 +252,18 @@ export default function MapScreen() {
       console.log('🎯 Recentering to user location');
       
       if (isTrackingMode) {
-        // Tracking mode: Close-up with corrected heading
-        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        // Tracking mode: Close-up with corrected heading (NO 3D)
+        const correctedHeading = location.smoothedHeading;
         
         const newCamera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          pitch: 45,
+          pitch: 0, // NO 3D
           heading: correctedHeading, // CORRECTED: Use proper heading
-          altitude: 300,
-          zoom: 18.5,
+          altitude: 200,
+          zoom: 19,
         };
         
         setCurrentCamera(newCamera);
@@ -368,10 +368,10 @@ export default function MapScreen() {
       latitude: location.latitude,
       longitude: location.longitude,
     },
-    pitch: isTrackingMode ? 45 : 0,
-    heading: isTrackingMode ? (location.smoothedHeading + 180) % 360 : 0, // CORRECTED
-    altitude: isTrackingMode ? 300 : 500,
-    zoom: isTrackingMode ? 18.5 : 17,
+    pitch: 0, // NO 3D by default
+    heading: isTrackingMode ? location.smoothedHeading : 0, // CORRECTED
+    altitude: isTrackingMode ? 200 : 500,
+    zoom: isTrackingMode ? 19 : 17,
   };
 
   return (
@@ -389,14 +389,14 @@ export default function MapScreen() {
         mapType={mapType}
         
         // ENABLE ALL MAP NAVIGATION
-        pitchEnabled={true}        // Allow 3D tilt
+        pitchEnabled={true}        // Allow 3D tilt (user can manually enable if wanted)
         rotateEnabled={true}       // Allow rotation
         scrollEnabled={true}       // Allow panning/scrolling
         zoomEnabled={true}         // Allow pinch to zoom
         panEnabled={true}          // Allow dragging
         
         followsUserLocation={false}
-        showsBuildings={true}      // Show 3D buildings
+        showsBuildings={true}      // Show 3D buildings when user manually tilts
         showsTraffic={false}
         showsIndoors={true}
         loadingEnabled={true}
