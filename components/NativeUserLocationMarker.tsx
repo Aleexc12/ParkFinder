@@ -155,60 +155,91 @@ export function NativeUserLocationMarker({ location }: NativeUserLocationMarkerP
   }));
 
   return (
-    <Animated.View 
-      style={[
-        styles.container, 
-        { 
-          width: circleSize, 
-          height: circleSize,
-        },
-        containerStyle
-      ]}
-    >
-      {/* Outer pulsing circle */}
-      <Animated.View
+    <View style={styles.markerContainer}>
+      {/* Main marker container - this stays centered */}
+      <Animated.View 
         style={[
-          styles.outerCircle,
-          {
-            width: circleSize,
+          styles.container, 
+          { 
+            width: circleSize, 
             height: circleSize,
-            borderRadius: circleSize / 2,
-            borderColor: signalColor,
-            backgroundColor: `${signalColor}${Math.round(circleOpacity * 255).toString(16).padStart(2, '0')}`,
           },
-          pulseStyle,
+          containerStyle
         ]}
-      />
-      
-      {/* Main rotating marker (teardrop shape) */}
+      >
+        {/* Outer pulsing circle */}
+        <Animated.View
+          style={[
+            styles.outerCircle,
+            {
+              width: circleSize,
+              height: circleSize,
+              borderRadius: circleSize / 2,
+              borderColor: signalColor,
+              backgroundColor: `${signalColor}${Math.round(circleOpacity * 255).toString(16).padStart(2, '0')}`,
+            },
+            pulseStyle,
+          ]}
+        />
+        
+        {/* Main rotating marker (center dot) */}
+        <Animated.View
+          style={[
+            styles.rotatingContainer,
+            rotatingStyle,
+          ]}
+        >
+          {/* Middle circle */}
+          <View
+            style={[
+              styles.middleCircle,
+              {
+                backgroundColor: signalColor,
+                opacity: location.signalStrength === 'lost' ? 0.6 : 0.8,
+              },
+            ]}
+          />
+          
+          {/* Inner circle (main dot) */}
+          <View
+            style={[
+              styles.innerCircle,
+              {
+                backgroundColor: signalColor,
+              },
+            ]}
+          />
+
+          {/* Movement indicator */}
+          {location.isMoving && location.signalStrength !== 'lost' && (
+            <View style={[styles.movementIndicator, { backgroundColor: signalColor }]}>
+              <View style={styles.movementDot} />
+            </View>
+          )}
+
+          {/* Signal strength indicator */}
+          {location.signalStrength === 'excellent' && (
+            <View style={[styles.precisionIndicator, { backgroundColor: signalColor }]}>
+              <View style={styles.precisionDot} />
+            </View>
+          )}
+
+          {/* Signal lost indicator */}
+          {location.signalStrength === 'lost' && (
+            <View style={[styles.signalLostIndicator, { backgroundColor: signalColor }]}>
+              <View style={styles.signalLostDot} />
+            </View>
+          )}
+        </Animated.View>
+      </Animated.View>
+
+      {/* Direction arrow - positioned OUTSIDE the main container */}
       <Animated.View
         style={[
-          styles.rotatingContainer,
+          styles.arrowContainer,
           rotatingStyle,
         ]}
       >
-        {/* Middle circle */}
-        <View
-          style={[
-            styles.middleCircle,
-            {
-              backgroundColor: signalColor,
-              opacity: location.signalStrength === 'lost' ? 0.6 : 0.8,
-            },
-          ]}
-        />
-        
-        {/* Inner circle (main dot) */}
-        <View
-          style={[
-            styles.innerCircle,
-            {
-              backgroundColor: signalColor,
-            },
-          ]}
-        />
-        
-        {/* Direction arrow (teardrop point) */}
         <View
           style={[
             styles.directionArrow,
@@ -218,36 +249,22 @@ export function NativeUserLocationMarker({ location }: NativeUserLocationMarkerP
             },
           ]}
         />
-
-        {/* Movement indicator */}
-        {location.isMoving && location.signalStrength !== 'lost' && (
-          <View style={[styles.movementIndicator, { backgroundColor: signalColor }]}>
-            <View style={styles.movementDot} />
-          </View>
-        )}
-
-        {/* Signal strength indicator */}
-        {location.signalStrength === 'excellent' && (
-          <View style={[styles.precisionIndicator, { backgroundColor: signalColor }]}>
-            <View style={styles.precisionDot} />
-          </View>
-        )}
-
-        {/* Signal lost indicator */}
-        {location.signalStrength === 'lost' && (
-          <View style={[styles.signalLostIndicator, { backgroundColor: signalColor }]}>
-            <View style={styles.signalLostDot} />
-          </View>
-        )}
       </Animated.View>
-    </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  markerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 60, // Larger container to accommodate arrow
+    height: 60,
+  },
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'absolute', // Position absolutely within markerContainer
   },
   outerCircle: {
     position: 'absolute',
@@ -291,9 +308,16 @@ const styles = StyleSheet.create({
     elevation: 10,
     zIndex: 2,
   },
-  directionArrow: {
+  // Arrow container positioned separately
+  arrowContainer: {
     position: 'absolute',
-    top: -12,
+    top: 8, // Position arrow above the center
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 20,
+    height: 20,
+  },
+  directionArrow: {
     width: 0,
     height: 0,
     borderLeftWidth: 8,
@@ -309,7 +333,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 8,
-    zIndex: 1,
   },
   movementIndicator: {
     position: 'absolute',
