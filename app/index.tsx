@@ -92,9 +92,9 @@ export default function MapScreen() {
       lastLocationUpdate.current = now;
 
       if (isTrackingMode) {
-        // Tracking Mode: Close-up view with CORRECT heading direction
-        // FIXED: Use the heading directly (NO inversion) so camera follows arrow direction
-        const cameraHeading = location.smoothedHeading;
+        // Tracking Mode: Close-up view with SYNCHRONIZED heading
+        // SIMPLE: Both camera and arrow use the SAME heading value
+        const heading = location.smoothedHeading;
         
         const newCamera: Camera = {
           center: {
@@ -102,7 +102,7 @@ export default function MapScreen() {
             longitude: location.longitude,
           },
           pitch: 0, // NO 3D - Keep it flat
-          heading: cameraHeading, // FIXED: Camera follows arrow direction directly
+          heading: heading, // SAME heading as arrow - SYNCHRONIZED
           altitude: 200, // Closer to ground for navigation feel
           zoom: 19, // Very close zoom for navigation
         };
@@ -190,8 +190,8 @@ export default function MapScreen() {
     if (location && location.isValid) {
       if (newTrackingMode) {
         // Switch to Tracking Mode (Waze/Google style) - NO 3D
-        // FIXED: Camera follows arrow direction directly
-        const cameraHeading = location.smoothedHeading;
+        // SIMPLE: Camera uses SAME heading as arrow
+        const heading = location.smoothedHeading;
         
         const camera: Camera = {
           center: {
@@ -199,7 +199,7 @@ export default function MapScreen() {
             longitude: location.longitude,
           },
           pitch: 0, // NO 3D - Keep it completely flat
-          heading: cameraHeading, // FIXED: Camera follows arrow direction
+          heading: heading, // SAME heading as arrow - SYNCHRONIZED
           altitude: 200, // Close to ground but no 3D tilt
           zoom: 19, // Very close for navigation
         };
@@ -252,8 +252,8 @@ export default function MapScreen() {
       console.log('🎯 Recentering to user location');
       
       if (isTrackingMode) {
-        // Tracking mode: Close-up with correct heading (NO 3D)
-        const cameraHeading = location.smoothedHeading;
+        // Tracking mode: Close-up with SYNCHRONIZED heading (NO 3D)
+        const heading = location.smoothedHeading;
         
         const newCamera: Camera = {
           center: {
@@ -261,7 +261,7 @@ export default function MapScreen() {
             longitude: location.longitude,
           },
           pitch: 0, // NO 3D
-          heading: cameraHeading, // FIXED: Camera follows arrow direction
+          heading: heading, // SAME heading as arrow - SYNCHRONIZED
           altitude: 200,
           zoom: 19,
         };
@@ -369,7 +369,7 @@ export default function MapScreen() {
       longitude: location.longitude,
     },
     pitch: 0, // NO 3D by default
-    heading: isTrackingMode ? location.smoothedHeading : 0, // FIXED: Camera follows arrow
+    heading: isTrackingMode ? location.smoothedHeading : 0, // SYNCHRONIZED with arrow
     altitude: isTrackingMode ? 200 : 500,
     zoom: isTrackingMode ? 19 : 17,
   };
