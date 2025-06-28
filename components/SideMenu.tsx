@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, MapPin, Settings, User, Wallet, Target, Activity, Wifi, WifiOff, Clock, Bell, Shield, CircleHelp as HelpCircle, LogOut, ChevronRight, Star, Plus, CreditCard as Edit } from 'lucide-react-native';
+import { X, MapPin, Settings, User, Wallet, Target, Activity, Wifi, WifiOff, Clock, Bell, Shield, CircleHelp as HelpCircle, LogOut, ChevronRight, Star, Plus, Edit } from 'lucide-react-native';
 
 interface LocationData {
   latitude: number;
@@ -35,7 +35,8 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
   const userData = {
     name: 'Carlos Mendoza',
     email: 'carlos.mendoza@email.com',
-    avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
+    // Car avatar - Lightning McQueen style cartoon car
+    avatar: 'https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
     memberSince: '2024',
     walletBalance: 0,
     totalTrips: 47,
@@ -44,18 +45,18 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
 
   // Get signal strength icon and text
   const getSignalIcon = () => {
-    if (!location) return <WifiOff size={14} color="#EF4444" />;
+    if (!location) return <WifiOff size={12} color="#EF4444" />;
     
     switch (location.signalStrength) {
       case 'excellent':
       case 'good':
-        return <Wifi size={14} color="#10B981" />;
+        return <Wifi size={12} color="#10B981" />;
       case 'poor':
-        return <Wifi size={14} color="#F59E0B" />;
+        return <Wifi size={12} color="#F59E0B" />;
       case 'lost':
-        return <WifiOff size={14} color="#EF4444" />;
+        return <WifiOff size={12} color="#EF4444" />;
       default:
-        return <WifiOff size={14} color="#9CA3AF" />;
+        return <WifiOff size={12} color="#9CA3AF" />;
     }
   };
 
@@ -81,24 +82,27 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
       {/* Header with Close Button */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <X size={24} color="#6B7280" />
+          <X size={20} color="#6B7280" />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* User Profile Section */}
         <TouchableOpacity style={styles.userSection} activeOpacity={0.7}>
-          <Image source={{ uri: userData.avatar }} style={styles.avatar} />
+          <View style={styles.carAvatarContainer}>
+            {/* Lightning McQueen style car emoji/icon */}
+            <Text style={styles.carEmoji}>🏎️</Text>
+          </View>
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{userData.name}</Text>
             <Text style={styles.userEmail}>{userData.email}</Text>
             <View style={styles.memberBadge}>
-              <User size={12} color="#3B82F6" />
+              <User size={10} color="#3B82F6" />
               <Text style={styles.memberText}>Miembro desde {userData.memberSince}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.editButton}>
-            <Edit size={16} color="#6B7280" />
+            <Edit size={14} color="#6B7280" />
           </TouchableOpacity>
         </TouchableOpacity>
 
@@ -106,7 +110,7 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
         <View style={styles.walletSection}>
           <View style={styles.walletHeader}>
             <View style={styles.walletIconContainer}>
-              <Wallet size={20} color="#10B981" />
+              <Wallet size={18} color="#10B981" />
             </View>
             <Text style={styles.walletTitle}>Billetera</Text>
           </View>
@@ -117,7 +121,7 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
           </View>
           
           <TouchableOpacity style={styles.addFundsButton}>
-            <Plus size={16} color="#FFFFFF" />
+            <Plus size={14} color="#FFFFFF" />
             <Text style={styles.addFundsText}>Agregar fondos</Text>
           </TouchableOpacity>
         </View>
@@ -125,44 +129,44 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
         {/* Settings Section */}
         <View style={styles.settingsSection}>
           <View style={styles.sectionHeader}>
-            <Settings size={18} color="#6B7280" />
+            <Settings size={16} color="#6B7280" />
             <Text style={styles.sectionTitle}>Configuración</Text>
           </View>
           
           <TouchableOpacity style={styles.settingItem}>
-            <Bell size={18} color="#6B7280" />
+            <Bell size={16} color="#6B7280" />
             <Text style={styles.settingText}>Notificaciones</Text>
-            <ChevronRight size={16} color="#D1D5DB" />
+            <ChevronRight size={14} color="#D1D5DB" />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.settingItem}>
-            <Shield size={18} color="#6B7280" />
+            <Shield size={16} color="#6B7280" />
             <Text style={styles.settingText}>Privacidad</Text>
-            <ChevronRight size={16} color="#D1D5DB" />
+            <ChevronRight size={14} color="#D1D5DB" />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.settingItem}>
-            <Star size={18} color="#F59E0B" />
-            <Text style={styles.settingText}>Lugares Favoritos</Text>
+            <Star size={16} color="#F59E0B" />
+            <Text style={styles.settingText}>Favoritos</Text>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{userData.favoriteSpots}</Text>
             </View>
-            <ChevronRight size={16} color="#D1D5DB" />
+            <ChevronRight size={14} color="#D1D5DB" />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.settingItem}>
-            <Clock size={18} color="#8B5CF6" />
+            <Clock size={16} color="#8B5CF6" />
             <Text style={styles.settingText}>Historial</Text>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{userData.totalTrips}</Text>
             </View>
-            <ChevronRight size={16} color="#D1D5DB" />
+            <ChevronRight size={14} color="#D1D5DB" />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.settingItem}>
-            <HelpCircle size={18} color="#6B7280" />
-            <Text style={styles.settingText}>Ayuda y Soporte</Text>
-            <ChevronRight size={16} color="#D1D5DB" />
+            <HelpCircle size={16} color="#6B7280" />
+            <Text style={styles.settingText}>Ayuda</Text>
+            <ChevronRight size={14} color="#D1D5DB" />
           </TouchableOpacity>
         </View>
 
@@ -187,7 +191,7 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
             {location && (
               <>
                 <View style={styles.gpsRow}>
-                  <Target size={14} color="#6B7280" />
+                  <Target size={12} color="#6B7280" />
                   <Text style={styles.gpsLabel}>
                     Precisión: ±{accuracy?.toFixed(0) || 'N/A'}m
                   </Text>
@@ -195,7 +199,7 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
 
                 {location.isMoving && location.speed && location.speed > 0.5 && (
                   <View style={styles.gpsRow}>
-                    <Activity size={14} color="#3B82F6" />
+                    <Activity size={12} color="#3B82F6" />
                     <Text style={styles.gpsLabel}>
                       {(location.speed * 3.6).toFixed(1)} km/h
                     </Text>
@@ -208,7 +212,7 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
 
         {/* Logout */}
         <TouchableOpacity style={styles.logoutButton} activeOpacity={0.7}>
-          <LogOut size={20} color="#EF4444" />
+          <LogOut size={18} color="#EF4444" />
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -216,7 +220,7 @@ export function SideMenu({ onClose, location, isTracking, accuracy }: SideMenuPr
       {/* Footer */}
       <View style={styles.footer}>
         <View style={styles.appInfo}>
-          <MapPin size={16} color="#3B82F6" />
+          <MapPin size={14} color="#3B82F6" />
           <Text style={styles.appName}>ParkingFinder</Text>
           <Text style={styles.appVersion}>v1.0.0</Text>
         </View>
@@ -234,108 +238,114 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 8,
     alignItems: 'flex-end',
   },
   closeButton: {
-    padding: 8,
+    padding: 6,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   
   // User Section
   userSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 16,
-    borderWidth: 3,
-    borderColor: '#E5E7EB',
+  carAvatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#DBEAFE',
+  },
+  carEmoji: {
+    fontSize: 24,
   },
   userInfo: {
     flex: 1,
   },
   userName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#111827',
     marginBottom: 2,
   },
   userEmail: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   memberBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 12,
+    borderRadius: 10,
     alignSelf: 'flex-start',
   },
   memberText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#3B82F6',
     fontWeight: '600',
-    marginLeft: 4,
+    marginLeft: 3,
   },
   editButton: {
-    padding: 8,
+    padding: 6,
   },
 
   // Wallet Section
   walletSection: {
     backgroundColor: '#F0FDF4',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: '#BBF7D0',
   },
   walletHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   walletIconContainer: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     backgroundColor: '#DCFCE7',
-    borderRadius: 18,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   walletTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#065F46',
   },
   walletBalance: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   balanceLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#059669',
     fontWeight: '500',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   balanceAmount: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#065F46',
   },
@@ -344,93 +354,93 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#10B981',
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
   addFundsText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    marginLeft: 8,
+    marginLeft: 6,
   },
 
   // Settings Section
   settingsSection: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#111827',
-    marginLeft: 12,
+    marginLeft: 10,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
   settingText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#374151',
-    marginLeft: 16,
+    marginLeft: 12,
     flex: 1,
   },
   badge: {
     backgroundColor: '#E5E7EB',
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 10,
-    marginRight: 8,
+    borderRadius: 8,
+    marginRight: 6,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#374151',
     fontWeight: '600',
   },
 
   // GPS Section
   gpsSection: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   gpsSectionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   gpsStatus: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   gpsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   gpsLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
-    marginLeft: 8,
+    marginLeft: 6,
     flex: 1,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   statusText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
   },
 
@@ -438,41 +448,41 @@ const styles = StyleSheet.create({
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    marginBottom: 20,
+    paddingVertical: 12,
+    marginBottom: 16,
   },
   logoutText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#EF4444',
     fontWeight: '600',
-    marginLeft: 16,
+    marginLeft: 12,
   },
 
   // Footer
   footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
   },
   appInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   appName: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#374151',
-    marginLeft: 8,
-    marginRight: 8,
+    marginLeft: 6,
+    marginRight: 6,
   },
   appVersion: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#9CA3AF',
   },
   footerText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#9CA3AF',
     textAlign: 'center',
   },
