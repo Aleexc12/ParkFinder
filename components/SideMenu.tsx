@@ -9,26 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  X,
-  MapPin, 
-  Settings, 
-  User, 
-  Wallet,
-  Target,
-  Activity,
-  Wifi,
-  WifiOff,
-  Clock,
-  Bell,
-  Shield,
-  HelpCircle,
-  LogOut,
-  ChevronRight,
-  Star,
-  CreditCard,
-  Gift
-} from 'lucide-react-native';
+import { X, MapPin, Settings, User, Wallet, Target, Activity, Wifi, WifiOff, Clock, Bell, Shield, CircleHelp as HelpCircle, LogOut, ChevronRight, Star, CreditCard, Gift } from 'lucide-react-native';
 
 interface LocationData {
   latitude: number;
