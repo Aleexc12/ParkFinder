@@ -70,7 +70,7 @@ export default function MapScreen() {
   const [userHasInteracted, setUserHasInteracted] = useState(false);
   
   const mapRef = useRef<MapView>(null);
-  const slideAnim = useRef(new RNAnimated.Value(-250)).current; // Reduced from -300 to -250
+  const slideAnim = useRef(new RNAnimated.Value(-190)).current; // Reduced to 75% of 250px = 190px
   const lastLocationUpdate = useRef<number>(0);
   const isAnimatingToUser = useRef<boolean>(false);
 
@@ -115,7 +115,7 @@ export default function MapScreen() {
   // Menu animation
   useEffect(() => {
     RNAnimated.timing(slideAnim, {
-      toValue: isMenuOpen ? 0 : -250, // Reduced from -300 to -250
+      toValue: isMenuOpen ? 0 : -190, // Reduced to 75% of 250px = 190px
       duration: 300,
       useNativeDriver: true,
     }).start();
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   menuContainer: {
-    width: 250, // Reduced from 300 to 250
+    width: 190, // Reduced to 75% of 250px = 190px
     height: '100%',
     backgroundColor: '#FFFFFF',
   },
