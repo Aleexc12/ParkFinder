@@ -16,21 +16,7 @@ import { NativeUserLocationMarker } from '@/components/NativeUserLocationMarker'
 import { LocationPermissionScreen } from '@/components/LocationPermissionScreen';
 import { FloatingMenu } from '@/components/FloatingMenu';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
-import { 
-  MapPin, 
-  Navigation, 
-  Target, 
-  Map, 
-  Satellite, 
-  Menu,
-  Search,
-  Mic,
-  Box,
-  Layers3,
-  RotateCcw,
-  ZoomIn,
-  ZoomOut
-} from 'lucide-react-native';
+import { MapPin, Navigation, Target, Map, Satellite, Menu, Search, Mic, Box, Layers as Layers3, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
