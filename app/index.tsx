@@ -93,8 +93,8 @@ export default function MapScreen() {
 
       if (isTrackingMode) {
         // Tracking Mode: Close-up view with CORRECTED heading (NO 3D)
-        // FIXED: Use the user's heading directly (not inverted)
-        const correctedHeading = location.smoothedHeading;
+        // FIXED: Invert the heading so the arrow points in the correct direction
+        const correctedHeading = (location.smoothedHeading + 180) % 360;
         
         const newCamera: Camera = {
           center: {
@@ -102,7 +102,7 @@ export default function MapScreen() {
             longitude: location.longitude,
           },
           pitch: 0, // NO 3D - Keep it flat like Google Maps standard view
-          heading: correctedHeading, // CORRECTED: Camera rotates to match user's direction
+          heading: correctedHeading, // CORRECTED: Invert heading so arrow points forward
           altitude: 200, // Closer to ground for navigation feel
           zoom: 19, // Very close zoom for navigation
         };
@@ -190,8 +190,8 @@ export default function MapScreen() {
     if (location && location.isValid) {
       if (newTrackingMode) {
         // Switch to Tracking Mode (Waze/Google style) - NO 3D
-        // FIXED: Use user's heading directly so arrow points forward
-        const correctedHeading = location.smoothedHeading;
+        // FIXED: Invert heading so arrow points in the correct direction
+        const correctedHeading = (location.smoothedHeading + 180) % 360;
         
         const camera: Camera = {
           center: {
@@ -199,7 +199,7 @@ export default function MapScreen() {
             longitude: location.longitude,
           },
           pitch: 0, // NO 3D - Keep it completely flat
-          heading: correctedHeading, // CORRECTED: Camera follows user's direction
+          heading: correctedHeading, // CORRECTED: Invert heading so arrow points forward
           altitude: 200, // Close to ground but no 3D tilt
           zoom: 19, // Very close for navigation
         };
@@ -253,7 +253,7 @@ export default function MapScreen() {
       
       if (isTrackingMode) {
         // Tracking mode: Close-up with corrected heading (NO 3D)
-        const correctedHeading = location.smoothedHeading;
+        const correctedHeading = (location.smoothedHeading + 180) % 360;
         
         const newCamera: Camera = {
           center: {
@@ -261,7 +261,7 @@ export default function MapScreen() {
             longitude: location.longitude,
           },
           pitch: 0, // NO 3D
-          heading: correctedHeading, // CORRECTED: Use proper heading
+          heading: correctedHeading, // CORRECTED: Invert heading
           altitude: 200,
           zoom: 19,
         };
@@ -369,7 +369,7 @@ export default function MapScreen() {
       longitude: location.longitude,
     },
     pitch: 0, // NO 3D by default
-    heading: isTrackingMode ? location.smoothedHeading : 0, // CORRECTED
+    heading: isTrackingMode ? (location.smoothedHeading + 180) % 360 : 0, // CORRECTED
     altitude: isTrackingMode ? 200 : 500,
     zoom: isTrackingMode ? 19 : 17,
   };
@@ -385,7 +385,7 @@ export default function MapScreen() {
         camera={isTrackingMode && isFollowingUser && !userHasInteracted ? currentCamera : undefined}
         showsUserLocation={false}
         showsMyLocationButton={false}
-        showsCompass={true}
+        showsCompass={true} // Native compass enabled
         mapType={mapType}
         
         // ENABLE ALL MAP NAVIGATION
@@ -457,7 +457,7 @@ export default function MapScreen() {
         <Menu size={24} color="#374151" />
       </TouchableOpacity>
 
-      {/* Top Right Controls - SIMPLIFIED */}
+      {/* Top Right Controls - ALIGNED WITH NATIVE COMPASS */}
       <View style={styles.topRightControls}>
         {/* Map type toggle */}
         <TouchableOpacity 
@@ -629,8 +629,8 @@ const styles = StyleSheet.create({
   },
   topRightControls: {
     position: 'absolute',
-    top: 60,
-    right: 20,
+    top: 60, // Aligned with native compass
+    right: 75, // Moved left to align with compass (compass is usually ~20px from right)
     gap: 12,
     zIndex: 1000,
   },
