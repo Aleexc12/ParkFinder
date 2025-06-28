@@ -92,17 +92,17 @@ export default function MapScreen() {
       lastLocationUpdate.current = now;
 
       if (isTrackingMode) {
-        // Tracking Mode: Close-up view with CORRECTED heading (NO 3D)
-        // FIXED: Invert the heading so the arrow points in the correct direction
-        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        // Tracking Mode: Close-up view with CORRECT heading direction
+        // FIXED: Use the heading directly (NO inversion) so camera follows arrow direction
+        const cameraHeading = location.smoothedHeading;
         
         const newCamera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          pitch: 0, // NO 3D - Keep it flat like Google Maps standard view
-          heading: correctedHeading, // CORRECTED: Invert heading so arrow points forward
+          pitch: 0, // NO 3D - Keep it flat
+          heading: cameraHeading, // FIXED: Camera follows arrow direction directly
           altitude: 200, // Closer to ground for navigation feel
           zoom: 19, // Very close zoom for navigation
         };
@@ -190,8 +190,8 @@ export default function MapScreen() {
     if (location && location.isValid) {
       if (newTrackingMode) {
         // Switch to Tracking Mode (Waze/Google style) - NO 3D
-        // FIXED: Invert heading so arrow points in the correct direction
-        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        // FIXED: Camera follows arrow direction directly
+        const cameraHeading = location.smoothedHeading;
         
         const camera: Camera = {
           center: {
@@ -199,7 +199,7 @@ export default function MapScreen() {
             longitude: location.longitude,
           },
           pitch: 0, // NO 3D - Keep it completely flat
-          heading: correctedHeading, // CORRECTED: Invert heading so arrow points forward
+          heading: cameraHeading, // FIXED: Camera follows arrow direction
           altitude: 200, // Close to ground but no 3D tilt
           zoom: 19, // Very close for navigation
         };
@@ -252,8 +252,8 @@ export default function MapScreen() {
       console.log('🎯 Recentering to user location');
       
       if (isTrackingMode) {
-        // Tracking mode: Close-up with corrected heading (NO 3D)
-        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        // Tracking mode: Close-up with correct heading (NO 3D)
+        const cameraHeading = location.smoothedHeading;
         
         const newCamera: Camera = {
           center: {
@@ -261,7 +261,7 @@ export default function MapScreen() {
             longitude: location.longitude,
           },
           pitch: 0, // NO 3D
-          heading: correctedHeading, // CORRECTED: Invert heading
+          heading: cameraHeading, // FIXED: Camera follows arrow direction
           altitude: 200,
           zoom: 19,
         };
@@ -295,13 +295,13 @@ export default function MapScreen() {
   const getMapTypeIcon = () => {
     switch (mapType) {
       case 'standard':
-        return <Map size={20} color="#374151" />;
+        return <Map size={18} color="#374151" />;
       case 'satellite':
-        return <Satellite size={20} color="#374151" />;
+        return <Satellite size={18} color="#374151" />;
       case 'hybrid':
-        return <Layers3 size={20} color="#374151" />;
+        return <Layers3 size={18} color="#374151" />;
       default:
-        return <Map size={20} color="#374151" />;
+        return <Map size={18} color="#374151" />;
     }
   };
 
@@ -369,7 +369,7 @@ export default function MapScreen() {
       longitude: location.longitude,
     },
     pitch: 0, // NO 3D by default
-    heading: isTrackingMode ? (location.smoothedHeading + 180) % 360 : 0, // CORRECTED
+    heading: isTrackingMode ? location.smoothedHeading : 0, // FIXED: Camera follows arrow
     altitude: isTrackingMode ? 200 : 500,
     zoom: isTrackingMode ? 19 : 17,
   };
@@ -457,7 +457,7 @@ export default function MapScreen() {
         <Menu size={24} color="#374151" />
       </TouchableOpacity>
 
-      {/* Top Right Controls - ALIGNED WITH NATIVE COMPASS */}
+      {/* Top Right Controls - POSITIONED BELOW NATIVE COMPASS */}
       <View style={styles.topRightControls}>
         {/* Map type toggle */}
         <TouchableOpacity 
@@ -476,7 +476,7 @@ export default function MapScreen() {
           onPress={toggleTrackingMode}
         >
           <Navigation 
-            size={20} 
+            size={18} 
             color={isTrackingMode ? "#FFFFFF" : "#374151"} 
           />
         </TouchableOpacity>
@@ -490,7 +490,7 @@ export default function MapScreen() {
           onPress={handleRecenter}
         >
           <Target 
-            size={20} 
+            size={18} 
             color={isFollowingUser && !userHasInteracted ? "#FFFFFF" : "#374151"} 
           />
         </TouchableOpacity>
@@ -629,16 +629,16 @@ const styles = StyleSheet.create({
   },
   topRightControls: {
     position: 'absolute',
-    top: 60, // Aligned with native compass
-    right: 75, // Moved left to align with compass (compass is usually ~20px from right)
-    gap: 12,
+    top: 120, // MOVED DOWN: Below the native compass (compass is usually around 60-80px from top)
+    right: 20, // MOVED RIGHT: Aligned with compass position
+    gap: 10, // Slightly smaller gap
     zIndex: 1000,
   },
   controlButton: {
-    width: 48,
-    height: 48,
+    width: 42, // SMALLER: Reduced from 48px to 42px
+    height: 42, // SMALLER: Reduced from 48px to 42px
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: 21, // Adjusted for new size
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
