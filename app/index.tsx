@@ -370,15 +370,6 @@ export default function MapScreen() {
         </View>
       </View>
 
-      {/* Following indicator */}
-      {!isFollowingUser && (
-        <View style={styles.followingIndicator}>
-          <Text style={styles.followingText}>
-            Toca el botón de ubicación para seguir tu posición
-          </Text>
-        </View>
-      )}
-
       {/* Side Menu */}
       <Modal
         visible={isMenuOpen}
@@ -554,23 +545,6 @@ const styles = StyleSheet.create({
   micButton: {
     marginLeft: 12,
     padding: 4,
-  },
-  followingIndicator: {
-    position: 'absolute',
-    top: 120,
-    left: 20,
-    right: 20,
-    backgroundColor: 'rgba(59, 130, 246, 0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    zIndex: 1000,
-  },
-  followingText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '500',
-    textAlign: 'center',
   },
   menuOverlay: {
     flex: 1,
