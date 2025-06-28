@@ -16,7 +16,21 @@ import { NativeUserLocationMarker } from '@/components/NativeUserLocationMarker'
 import { LocationPermissionScreen } from '@/components/LocationPermissionScreen';
 import { FloatingMenu } from '@/components/FloatingMenu';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
-import { MapPin, Navigation, Target, Map, Satellite, Menu, Search, Mic, Box, Layers as Layers3, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react-native';
+import { 
+  MapPin, 
+  Navigation, 
+  Target, 
+  Map, 
+  Satellite, 
+  Menu, 
+  Search, 
+  Mic, 
+  Layers as Layers3, 
+  ZoomIn, 
+  ZoomOut,
+  Play,
+  Pause
+} from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -54,7 +68,7 @@ export default function MapScreen() {
   });
 
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid'>('standard');
-  const [is3DMode, setIs3DMode] = useState(false);
+  const [isTrackingMode, setIsTrackingMode] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentRegion, setCurrentRegion] = useState<Region | null>(null);
@@ -79,34 +93,34 @@ export default function MapScreen() {
       const now = Date.now();
       
       // Throttle location updates to avoid excessive animations
-      if (now - lastLocationUpdate.current < 1000) return;
+      if (now - lastLocationUpdate.current < 800) return;
       lastLocationUpdate.current = now;
 
-      if (is3DMode) {
-        // 3D Camera mode
+      if (isTrackingMode) {
+        // Tracking Mode: Close-up view with smooth heading following (like Waze/Google)
         const newCamera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          pitch: 60, // 3D tilt angle (0-90 degrees)
-          heading: location.smoothedHeading, // Follow user's heading
-          altitude: 500, // Height above ground
-          zoom: 17, // Zoom level for 3D view
+          pitch: 45, // Slight 3D tilt for better road view
+          heading: location.smoothedHeading, // Follow user's heading smoothly
+          altitude: 300, // Closer to ground for navigation feel
+          zoom: 18.5, // Very close zoom for navigation
         };
         
         setCurrentCamera(newCamera);
         
         if (!isAnimatingToUser.current) {
           isAnimatingToUser.current = true;
-          mapRef.current?.animateCamera(newCamera, { duration: 1000 });
+          mapRef.current?.animateCamera(newCamera, { duration: 600 });
           
           setTimeout(() => {
             isAnimatingToUser.current = false;
-          }, 1200);
+          }, 800);
         }
       } else {
-        // 2D Region mode
+        // Standard Mode: Traditional top-down view
         const newRegion: Region = {
           latitude: location.latitude,
           longitude: location.longitude,
@@ -118,15 +132,15 @@ export default function MapScreen() {
         
         if (!isAnimatingToUser.current) {
           isAnimatingToUser.current = true;
-          mapRef.current?.animateToRegion(newRegion, 800);
+          mapRef.current?.animateToRegion(newRegion, 600);
           
           setTimeout(() => {
             isAnimatingToUser.current = false;
-          }, 1000);
+          }, 800);
         }
       }
     }
-  }, [location, isFollowingUser, userHasInteracted, is3DMode]);
+  }, [location, isFollowingUser, userHasInteracted, isTrackingMode]);
 
   // Handle when user starts interacting with the map
   const handleUserInteractionStart = () => {
@@ -143,7 +157,7 @@ export default function MapScreen() {
     setCurrentRegion(region);
   };
 
-  // Handle camera changes (for 3D mode)
+  // Handle camera changes (for tracking mode)
   const handleCameraChange = (camera: Camera) => {
     if (isAnimatingToUser.current) return;
     setCurrentCamera(camera);
@@ -170,29 +184,33 @@ export default function MapScreen() {
     }
   };
 
-  // Toggle between 2D and 3D mode
-  const toggle3DMode = () => {
-    const new3DMode = !is3DMode;
-    setIs3DMode(new3DMode);
+  // Toggle between Standard and Tracking mode
+  const toggleTrackingMode = () => {
+    const newTrackingMode = !isTrackingMode;
+    setIsTrackingMode(newTrackingMode);
     
     if (location && location.isValid) {
-      if (new3DMode) {
-        // Switch to 3D
+      if (newTrackingMode) {
+        // Switch to Tracking Mode (Waze/Google style)
         const camera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          pitch: 60,
-          heading: location.smoothedHeading,
-          altitude: 500,
-          zoom: 17,
+          pitch: 45, // Slight tilt for road perspective
+          heading: location.smoothedHeading, // Follow user direction
+          altitude: 300, // Close to ground
+          zoom: 18.5, // Very close for navigation
         };
         
         setCurrentCamera(camera);
-        mapRef.current?.animateCamera(camera, { duration: 1500 });
+        mapRef.current?.animateCamera(camera, { duration: 1200 });
+        
+        // Auto-enable following when entering tracking mode
+        setIsFollowingUser(true);
+        setUserHasInteracted(false);
       } else {
-        // Switch to 2D
+        // Switch to Standard Mode (traditional top-down)
         const region: Region = {
           latitude: location.latitude,
           longitude: location.longitude,
@@ -200,8 +218,21 @@ export default function MapScreen() {
           longitudeDelta: 0.008,
         };
         
+        // Reset to top-down view
+        const camera: Camera = {
+          center: {
+            latitude: location.latitude,
+            longitude: location.longitude,
+          },
+          pitch: 0, // Top-down view
+          heading: 0, // North up
+          altitude: 500,
+          zoom: 17,
+        };
+        
         setCurrentRegion(region);
-        mapRef.current?.animateToRegion(region, 1000);
+        setCurrentCamera(camera);
+        mapRef.current?.animateCamera(camera, { duration: 1000 });
       }
     }
   };
@@ -214,41 +245,20 @@ export default function MapScreen() {
     setMapType(types[nextIndex]);
   };
 
-  // Reset camera rotation (for 3D mode)
-  const resetCameraRotation = () => {
-    if (location && location.isValid) {
-      if (is3DMode) {
-        const camera: Camera = {
-          center: {
-            latitude: location.latitude,
-            longitude: location.longitude,
-          },
-          pitch: 0, // Reset to top-down view
-          heading: 0, // Reset rotation
-          altitude: 500,
-          zoom: currentCamera?.zoom || 17,
-        };
-        
-        setCurrentCamera(camera);
-        mapRef.current?.animateCamera(camera, { duration: 1000 });
-      }
-    }
-  };
-
   // Zoom in
   const zoomIn = () => {
-    if (is3DMode && currentCamera) {
+    if (isTrackingMode && currentCamera) {
       const newCamera: Camera = {
         ...currentCamera,
-        zoom: Math.min((currentCamera.zoom || 15) + 1, 20),
+        zoom: Math.min((currentCamera.zoom || 18) + 0.5, 20),
       };
       setCurrentCamera(newCamera);
       mapRef.current?.animateCamera(newCamera, { duration: 300 });
     } else if (currentRegion) {
       const newRegion: Region = {
         ...currentRegion,
-        latitudeDelta: currentRegion.latitudeDelta * 0.5,
-        longitudeDelta: currentRegion.longitudeDelta * 0.5,
+        latitudeDelta: currentRegion.latitudeDelta * 0.7,
+        longitudeDelta: currentRegion.longitudeDelta * 0.7,
       };
       setCurrentRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 300);
@@ -257,18 +267,18 @@ export default function MapScreen() {
 
   // Zoom out
   const zoomOut = () => {
-    if (is3DMode && currentCamera) {
+    if (isTrackingMode && currentCamera) {
       const newCamera: Camera = {
         ...currentCamera,
-        zoom: Math.max((currentCamera.zoom || 15) - 1, 3),
+        zoom: Math.max((currentCamera.zoom || 18) - 0.5, 10),
       };
       setCurrentCamera(newCamera);
       mapRef.current?.animateCamera(newCamera, { duration: 300 });
     } else if (currentRegion) {
       const newRegion: Region = {
         ...currentRegion,
-        latitudeDelta: Math.min(currentRegion.latitudeDelta * 2, 0.5),
-        longitudeDelta: Math.min(currentRegion.longitudeDelta * 2, 0.5),
+        latitudeDelta: Math.min(currentRegion.latitudeDelta * 1.4, 0.5),
+        longitudeDelta: Math.min(currentRegion.longitudeDelta * 1.4, 0.5),
       };
       setCurrentRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 300);
@@ -280,21 +290,23 @@ export default function MapScreen() {
     if (location && location.isValid) {
       console.log('🎯 Recentering to user location');
       
-      if (is3DMode) {
+      if (isTrackingMode) {
+        // Tracking mode: Close-up with heading
         const newCamera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          pitch: 60,
+          pitch: 45,
           heading: location.smoothedHeading,
-          altitude: 500,
-          zoom: 17,
+          altitude: 300,
+          zoom: 18.5,
         };
         
         setCurrentCamera(newCamera);
-        mapRef.current?.animateCamera(newCamera, { duration: 1500 });
+        mapRef.current?.animateCamera(newCamera, { duration: 1200 });
       } else {
+        // Standard mode: Top-down view
         const newRegion: Region = {
           latitude: location.latitude,
           longitude: location.longitude,
@@ -303,7 +315,7 @@ export default function MapScreen() {
         };
         
         setCurrentRegion(newRegion);
-        mapRef.current?.animateToRegion(newRegion, 1000);
+        mapRef.current?.animateToRegion(newRegion, 800);
       }
       
       setIsFollowingUser(true);
@@ -313,6 +325,15 @@ export default function MapScreen() {
       setTimeout(() => {
         isAnimatingToUser.current = false;
       }, 1200);
+    }
+  };
+
+  // Toggle tracking on/off
+  const toggleTracking = () => {
+    if (isTracking) {
+      stopTracking();
+    } else {
+      startTracking();
     }
   };
 
@@ -393,10 +414,10 @@ export default function MapScreen() {
       latitude: location.latitude,
       longitude: location.longitude,
     },
-    pitch: is3DMode ? 60 : 0,
-    heading: is3DMode ? location.smoothedHeading : 0,
-    altitude: 500,
-    zoom: 17,
+    pitch: isTrackingMode ? 45 : 0,
+    heading: isTrackingMode ? location.smoothedHeading : 0,
+    altitude: isTrackingMode ? 300 : 500,
+    zoom: isTrackingMode ? 18.5 : 17,
   };
 
   return (
@@ -404,16 +425,16 @@ export default function MapScreen() {
       <MapView
         ref={mapRef}
         style={styles.map}
-        initialRegion={!is3DMode ? initialRegion : undefined}
-        initialCamera={is3DMode ? initialCamera : undefined}
-        region={!is3DMode && isFollowingUser && !userHasInteracted ? currentRegion : undefined}
-        camera={is3DMode && isFollowingUser && !userHasInteracted ? currentCamera : undefined}
+        initialRegion={!isTrackingMode ? initialRegion : undefined}
+        initialCamera={isTrackingMode ? initialCamera : undefined}
+        region={!isTrackingMode && isFollowingUser && !userHasInteracted ? currentRegion : undefined}
+        camera={isTrackingMode && isFollowingUser && !userHasInteracted ? currentCamera : undefined}
         showsUserLocation={false}
         showsMyLocationButton={false}
         showsCompass={true}
         mapType={mapType}
         
-        // ENABLE ALL MAP NAVIGATION WITH 3D SUPPORT
+        // ENABLE ALL MAP NAVIGATION
         pitchEnabled={true}        // Allow 3D tilt
         rotateEnabled={true}       // Allow rotation
         scrollEnabled={true}       // Allow panning/scrolling
@@ -421,7 +442,7 @@ export default function MapScreen() {
         panEnabled={true}          // Allow dragging
         
         followsUserLocation={false}
-        showsBuildings={true}      // Essential for 3D view
+        showsBuildings={true}      // Show 3D buildings
         showsTraffic={false}
         showsIndoors={true}
         loadingEnabled={true}
@@ -492,29 +513,34 @@ export default function MapScreen() {
           {getMapTypeIcon()}
         </TouchableOpacity>
 
-        {/* 3D Mode toggle */}
+        {/* Tracking Mode toggle */}
         <TouchableOpacity 
           style={[
             styles.controlButton,
-            { backgroundColor: is3DMode ? '#3B82F6' : '#FFFFFF' }
+            { backgroundColor: isTrackingMode ? '#1E88E5' : '#FFFFFF' }
           ]}
-          onPress={toggle3DMode}
+          onPress={toggleTrackingMode}
         >
-          <Box 
+          <Navigation 
             size={20} 
-            color={is3DMode ? "#FFFFFF" : "#374151"} 
+            color={isTrackingMode ? "#FFFFFF" : "#374151"} 
           />
         </TouchableOpacity>
 
-        {/* Reset rotation (only in 3D mode) */}
-        {is3DMode && (
-          <TouchableOpacity 
-            style={styles.controlButton}
-            onPress={resetCameraRotation}
-          >
-            <RotateCcw size={20} color="#374151" />
-          </TouchableOpacity>
-        )}
+        {/* GPS Tracking toggle */}
+        <TouchableOpacity 
+          style={[
+            styles.controlButton,
+            { backgroundColor: isTracking ? '#10B981' : '#EF4444' }
+          ]}
+          onPress={toggleTracking}
+        >
+          {isTracking ? (
+            <Pause size={20} color="#FFFFFF" />
+          ) : (
+            <Play size={20} color="#FFFFFF" />
+          )}
+        </TouchableOpacity>
 
         {/* Recenter button */}
         <TouchableOpacity 
@@ -548,11 +574,11 @@ export default function MapScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* 3D Mode Indicator */}
-      {is3DMode && (
+      {/* Tracking Mode Indicator */}
+      {isTrackingMode && (
         <View style={styles.modeIndicator}>
-          <Box size={16} color="#3B82F6" />
-          <Text style={styles.modeText}>Vista 3D</Text>
+          <Navigation size={16} color="#1E88E5" />
+          <Text style={styles.modeText}>Modo Seguimiento</Text>
         </View>
       )}
 
@@ -736,7 +762,7 @@ const styles = StyleSheet.create({
     left: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(59, 130, 246, 0.9)',
+    backgroundColor: 'rgba(30, 136, 229, 0.9)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
