@@ -8,7 +8,6 @@ import {
   Platform,
   TextInput,
   Modal,
-  Animated as RNAnimated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Region, Camera } from 'react-native-maps';
@@ -25,11 +24,7 @@ import {
   Menu, 
   Search, 
   Mic, 
-  Layers as Layers3, 
-  ZoomIn, 
-  ZoomOut,
-  Play,
-  Pause
+  Layers as Layers3
 } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -98,13 +93,16 @@ export default function MapScreen() {
 
       if (isTrackingMode) {
         // Tracking Mode: Close-up view with smooth heading following (like Waze/Google)
+        // FIXED: Use the OPPOSITE of smoothedHeading to point camera in correct direction
+        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        
         const newCamera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
           pitch: 45, // Slight 3D tilt for better road view
-          heading: location.smoothedHeading, // Follow user's heading smoothly
+          heading: correctedHeading, // CORRECTED: Camera points opposite to user's heading
           altitude: 300, // Closer to ground for navigation feel
           zoom: 18.5, // Very close zoom for navigation
         };
@@ -192,13 +190,16 @@ export default function MapScreen() {
     if (location && location.isValid) {
       if (newTrackingMode) {
         // Switch to Tracking Mode (Waze/Google style)
+        // FIXED: Use corrected heading calculation
+        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        
         const camera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
           pitch: 45, // Slight tilt for road perspective
-          heading: location.smoothedHeading, // Follow user direction
+          heading: correctedHeading, // CORRECTED: Camera points in correct direction
           altitude: 300, // Close to ground
           zoom: 18.5, // Very close for navigation
         };
@@ -245,60 +246,22 @@ export default function MapScreen() {
     setMapType(types[nextIndex]);
   };
 
-  // Zoom in
-  const zoomIn = () => {
-    if (isTrackingMode && currentCamera) {
-      const newCamera: Camera = {
-        ...currentCamera,
-        zoom: Math.min((currentCamera.zoom || 18) + 0.5, 20),
-      };
-      setCurrentCamera(newCamera);
-      mapRef.current?.animateCamera(newCamera, { duration: 300 });
-    } else if (currentRegion) {
-      const newRegion: Region = {
-        ...currentRegion,
-        latitudeDelta: currentRegion.latitudeDelta * 0.7,
-        longitudeDelta: currentRegion.longitudeDelta * 0.7,
-      };
-      setCurrentRegion(newRegion);
-      mapRef.current?.animateToRegion(newRegion, 300);
-    }
-  };
-
-  // Zoom out
-  const zoomOut = () => {
-    if (isTrackingMode && currentCamera) {
-      const newCamera: Camera = {
-        ...currentCamera,
-        zoom: Math.max((currentCamera.zoom || 18) - 0.5, 10),
-      };
-      setCurrentCamera(newCamera);
-      mapRef.current?.animateCamera(newCamera, { duration: 300 });
-    } else if (currentRegion) {
-      const newRegion: Region = {
-        ...currentRegion,
-        latitudeDelta: Math.min(currentRegion.latitudeDelta * 1.4, 0.5),
-        longitudeDelta: Math.min(currentRegion.longitudeDelta * 1.4, 0.5),
-      };
-      setCurrentRegion(newRegion);
-      mapRef.current?.animateToRegion(newRegion, 300);
-    }
-  };
-
   // Recenter to user location
   const handleRecenter = () => {
     if (location && location.isValid) {
       console.log('🎯 Recentering to user location');
       
       if (isTrackingMode) {
-        // Tracking mode: Close-up with heading
+        // Tracking mode: Close-up with corrected heading
+        const correctedHeading = (location.smoothedHeading + 180) % 360;
+        
         const newCamera: Camera = {
           center: {
             latitude: location.latitude,
             longitude: location.longitude,
           },
           pitch: 45,
-          heading: location.smoothedHeading,
+          heading: correctedHeading, // CORRECTED: Use proper heading
           altitude: 300,
           zoom: 18.5,
         };
@@ -325,15 +288,6 @@ export default function MapScreen() {
       setTimeout(() => {
         isAnimatingToUser.current = false;
       }, 1200);
-    }
-  };
-
-  // Toggle tracking on/off
-  const toggleTracking = () => {
-    if (isTracking) {
-      stopTracking();
-    } else {
-      startTracking();
     }
   };
 
@@ -415,7 +369,7 @@ export default function MapScreen() {
       longitude: location.longitude,
     },
     pitch: isTrackingMode ? 45 : 0,
-    heading: isTrackingMode ? location.smoothedHeading : 0,
+    heading: isTrackingMode ? (location.smoothedHeading + 180) % 360 : 0, // CORRECTED
     altitude: isTrackingMode ? 300 : 500,
     zoom: isTrackingMode ? 18.5 : 17,
   };
@@ -503,7 +457,7 @@ export default function MapScreen() {
         <Menu size={24} color="#374151" />
       </TouchableOpacity>
 
-      {/* Top Right Controls */}
+      {/* Top Right Controls - SIMPLIFIED */}
       <View style={styles.topRightControls}>
         {/* Map type toggle */}
         <TouchableOpacity 
@@ -513,7 +467,7 @@ export default function MapScreen() {
           {getMapTypeIcon()}
         </TouchableOpacity>
 
-        {/* Tracking Mode toggle */}
+        {/* Tracking Mode toggle - with visual indicator */}
         <TouchableOpacity 
           style={[
             styles.controlButton,
@@ -527,22 +481,7 @@ export default function MapScreen() {
           />
         </TouchableOpacity>
 
-        {/* GPS Tracking toggle */}
-        <TouchableOpacity 
-          style={[
-            styles.controlButton,
-            { backgroundColor: isTracking ? '#10B981' : '#EF4444' }
-          ]}
-          onPress={toggleTracking}
-        >
-          {isTracking ? (
-            <Pause size={20} color="#FFFFFF" />
-          ) : (
-            <Play size={20} color="#FFFFFF" />
-          )}
-        </TouchableOpacity>
-
-        {/* Recenter button */}
+        {/* Recenter button - with visual indicator */}
         <TouchableOpacity 
           style={[
             styles.controlButton,
@@ -556,31 +495,6 @@ export default function MapScreen() {
           />
         </TouchableOpacity>
       </View>
-
-      {/* Zoom Controls - Right Side */}
-      <View style={styles.zoomControls}>
-        <TouchableOpacity 
-          style={styles.zoomButton}
-          onPress={zoomIn}
-        >
-          <ZoomIn size={20} color="#374151" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.zoomButton, { marginTop: 8 }]}
-          onPress={zoomOut}
-        >
-          <ZoomOut size={20} color="#374151" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Tracking Mode Indicator */}
-      {isTrackingMode && (
-        <View style={styles.modeIndicator}>
-          <Navigation size={16} color="#1E88E5" />
-          <Text style={styles.modeText}>Modo Seguimiento</Text>
-        </View>
-      )}
 
       {/* Search Bar - Bottom */}
       <View style={styles.searchContainer}>
@@ -734,45 +648,6 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-  },
-  zoomControls: {
-    position: 'absolute',
-    right: 20,
-    bottom: 140,
-    zIndex: 1000,
-  },
-  zoomButton: {
-    width: 44,
-    height: 44,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  modeIndicator: {
-    position: 'absolute',
-    top: 120,
-    left: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(30, 136, 229, 0.9)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    zIndex: 1000,
-  },
-  modeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 6,
   },
   searchContainer: {
     position: 'absolute',
